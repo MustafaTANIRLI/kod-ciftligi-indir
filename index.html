@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#8dcb5c">
+<title>Kod Çiftliği · İndir</title>
+<meta name="description" content="Kod Çiftliği: 6–10 yaş çocuklar için blok kodlama çiftlik oyunu. Android tablete indirip kurun ya da akıllı tahtada tarayıcıda oynayın.">
+<link rel="icon" href="icon.png">
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; padding: 24px 16px;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(ellipse 40% 34% at 82% 18%, #a6da7a 0 98%, transparent 100%),
+    radial-gradient(ellipse 36% 30% at 8% 92%, #a6da7a 0 98%, transparent 100%),
+    #8dcb5c;
+  font-family: "Nunito", "Segoe UI Rounded", "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  color: #2d3b52;
+}
+.card {
+  width: 100%; max-width: 720px; background: #fff; border-radius: 28px; padding: 26px;
+  box-shadow: 0 8px 0 rgba(20, 70, 10, .16), 0 20px 50px rgba(20, 70, 10, .22);
+}
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand img { width: 88px; height: 88px; border-radius: 22%; box-shadow: 0 4px 12px rgba(0, 0, 0, .18); }
+h1 { margin: 0; font-size: 36px; font-weight: 900; line-height: 1.1; }
+.tag { margin: 2px 0 0; font-weight: 800; color: #5d6b80; }
+.meta { margin: 4px 0 0; font-size: 14px; color: #7a889c; }
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 12px; height: 76px; margin: 24px 0 6px;
+  border-radius: 22px; background: #3cc45a; color: #fff; text-decoration: none;
+  font-size: 32px; font-weight: 900; letter-spacing: .5px; text-shadow: 0 2px 0 rgba(0, 0, 0, .16);
+  box-shadow: 0 6px 0 #25913d, 0 10px 18px rgba(0, 0, 0, .18); transition: transform .08s, box-shadow .08s;
+}
+.btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #25913d, 0 3px 6px rgba(0, 0, 0, .2); }
+.btn svg { width: 36px; height: 36px; }
+.status { min-height: 1.5em; margin-bottom: 8px; text-align: center; font-weight: 800; color: #25913d; }
+.qr-box { display: flex; align-items: center; gap: 20px; margin: 4px 0 14px; padding: 16px; border-radius: 18px; background: #f3f6f9; }
+.qr-box[hidden] { display: none; }
+.qr-box img { width: 168px; height: 168px; flex: none; background: #fff; border-radius: 10px; }
+.qr-box p { margin: 0 0 6px; line-height: 1.45; }
+.qr-box a { color: #1c6fb0; font-weight: 800; }
+@media (max-width: 520px) { .qr-box { flex-direction: column; text-align: center; } }
+ol { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+ol li { counter-increment: s; position: relative; padding: 10px 0 10px 50px; line-height: 1.45; border-top: 1px solid #edf1f5; }
+ol li:first-child { border-top: 0; }
+ol li::before {
+  content: counter(s); position: absolute; left: 0; top: 8px; width: 34px; height: 34px; border-radius: 50%;
+  background: #2e9be6; color: #fff; font-weight: 900; display: grid; place-items: center;
+}
+b { font-weight: 900; }
+.small { display: block; margin-top: 2px; font-size: 14px; color: #7a889c; }
+.foot { margin: 14px 0 0; padding: 12px 16px; border-radius: 14px; background: #eef8e8; color: #3c7a31; font-weight: 800; }
+.foot .small { color: #5b8a52; font-weight: 700; }
+.board { margin: 16px 0 0; padding: 18px; border-radius: 18px; background: #eef5fc; }
+.board h2 { margin: 0 0 4px; font-size: 22px; font-weight: 900; }
+.board p { margin: 0 0 12px; line-height: 1.45; }
+.board .row { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn2 {
+  display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px; border-radius: 16px;
+  font-size: 19px; font-weight: 900; text-decoration: none; color: #fff; background: #2e9be6;
+  box-shadow: 0 5px 0 #1c6fb0; transition: transform .08s, box-shadow .08s;
+}
+.btn2:active { transform: translateY(4px); box-shadow: 0 1px 0 #1c6fb0; }
+.btn2.alt { background: #fff; color: #1c6fb0; box-shadow: 0 5px 0 #c9d9ea; }
+.btn2 svg { width: 22px; height: 22px; }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="brand">
+    <img src="icon.png" alt="">
+    <div>
+      <h1>Kod Çiftliği</h1>
+      <p class="tag">Kodla, Ek, Topla!</p>
+      <p class="meta" id="meta">Android uygulaması · 6–10 yaş için blok kodlama oyunu</p>
+    </div>
+  </div>
+  <a class="btn" id="dl" href="https://github.com/MustafaTANIRLI/kod-ciftligi-indir/releases/latest/download/KodCiftligi.apk">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+    İndir
+  </a>
+  <div class="status" id="status" role="status"></div>
+  <section class="qr-box" id="qr-box" hidden>
+    <img src="karekod.svg" alt="Bu sayfanın karekodu">
+    <div>
+      <p><b>Tablete kurmak için</b> tabletin kamerasıyla bu karekodu okutun; bu sayfa tablette açılır.</p>
+      <p><a href="karekod.png" download>Karekodu yazdırmak için indir</a></p>
+    </div>
+  </section>
+  <ol>
+    <li><b>İndir</b>'e dokunun. Tarayıcı "zararlı olabilir" derse <b>Yine de indir</b>'i seçin.</li>
+    <li>İndirme bitince <b>Aç</b>'a dokunun.<span class="small">Kaçırırsanız: Dosyalar → İndirilenler → KodCiftligi.apk</span></li>
+    <li>"Bilinmeyen uygulamalar" izni sorulursa <b>Ayarlar</b>'a girip izin verin, sonra geri dönün.<span class="small">Honor'da: Ayarlar → Güvenlik → Daha fazla ayar → Bilinmeyen kaynaklardan uygulama yükle</span></li>
+    <li><b>Yükle</b>'ye dokunun. Play Koruma sorarsa <b>Yine de yükle</b>.</li>
+  </ol>
+  <p class="foot">Yeni sürüm eskisinin üstüne kurulur; yıldızlar ve programlar kaybolmaz. Kurulduktan sonra internet gerekmez.
+    <span class="small">Yeni sürümü uygulamanın içinden de alabilirsiniz: Ayarlar → Güncelleme → Güncelle.
+    Reklam yok, veri toplanmaz; oyun internete yalnızca yeni sürüm olup olmadığına bakmak için çıkar.</span></p>
+  <section class="board">
+    <h2>Akıllı tahtada ya da bilgisayarda</h2>
+    <p>Kurulum gerekmez, oyun tarayıcıda açılır; sağ üstteki düğme tam ekrana geçirir. İnterneti olmayan tahta için dosyayı indirip USB bellekle götürün, tahtada çift tıklayarak açın.</p>
+    <div class="row">
+      <a class="btn2" href="KodCiftligi-tahta.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.6v14.8a1 1 0 0 0 1.52.85l11.6-7.4a1 1 0 0 0 0-1.7L9.02 3.75A1 1 0 0 0 7.5 4.6z" fill="currentColor"/></svg>
+        Tarayıcıda oyna
+      </a>
+      <a class="btn2 alt" href="KodCiftligi-tahta.html" download="KodCiftligi-tahta.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+        Dosyayı indir (USB için)
+      </a>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  // bilgisayarda açılınca tabletlerin okutacağı karekodu göster
+  if (!/Android/i.test(navigator.userAgent)) document.getElementById('qr-box').hidden = false;
+  document.getElementById('dl').addEventListener('click', function () {
+    document.getElementById('status').textContent = 'İndirme başladı. Bitince Aç\'a dokunun.';
+  });
+  // son sürümün numarası, boyutu ve tarihi: version.json (tools/publish_apk.py yazar; uygulama da buna bakar)
+  fetch('version.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (v) {
+      if (!v || !v.versionName) return;
+      var parts = ['Android uygulaması', 'Sürüm ' + v.versionName];
+      if (v.size) parts.push((v.size / 1048576).toFixed(1).replace('.', ',') + ' MB');
+      if (v.date) parts.push(new Date(v.date + 'T12:00:00').toLocaleDateString('tr-TR'));
+      document.getElementById('meta').textContent = parts.join(' · ');
+    })
+    .catch(function () {});
+})();
+</script>
+</body>
+</html>
