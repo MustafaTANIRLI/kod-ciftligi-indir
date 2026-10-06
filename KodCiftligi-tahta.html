@@ -843,7 +843,7 @@ button { font: inherit; cursor: pointer; -webkit-appearance: none; appearance: n
 
 <div id="rotate-hint"><div class="rot-phone"></div><p>Lütfen cihazı yatay çevir · Please rotate your device</p></div>
 
-<script>window.KC_BUILD = {"versionName": "1.0", "versionCode": 399419, "page": "https://mustafatanirli.github.io/kod-ciftligi-indir/", "board": "KodCiftligi-tahta.html", "built": "2026-10-05 08:58"};</script>
+<script>window.KC_BUILD = {"versionName": "1.1", "versionCode": 400919, "page": "https://mustafatanirli.github.io/kod-ciftligi-indir/", "board": "KodCiftligi-tahta.html", "built": "2026-10-06 09:59"};</script>
 <script>
 /* tools/import_assets.py tarafından yazılır: web/img/ içindeki kullanılabilir resimler
    ve kırpmadan sonra hesaplanan çapa noktaları (ayakta duranların yere bastığı yer, 0..1).
@@ -899,10 +899,14 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
 
   /* ---------- kayıt (localStorage; yoksa bellekte) ----------
      v: şema sürümü. Bölüm sırası değişirse migrate() eski kayıtları bir kez yeni numaralara taşır
-     (Code Car 1.5'teki gibi); o zaman v artırılır ve MOVES tablosu doldurulur. */
+     (Code Car 1.5'teki gibi); o zaman v artırılır ve MOVES tablosu doldurulur.
+     Haritası değişen bölümlerin yarım programları yeni haritada anlamsızdır: REDRAWN'daki bölümlerin programları
+     bir kez silinir, yıldızlar kalır. */
   const KEY = 'kodciftligi.v1';
-  const SCHEMA = 1;
-  const MOVES = {};  // ör. { 2: { '3-1': '4-1', '4-1': '3-1' } } — sürüm 2'ye geçerken yer değiştirecek bölümler
+  const SCHEMA = 2;
+  const MOVES = {};  // ör. { 3: { '3-1': '4-1', '4-1': '3-1' } } — o şemaya geçerken yer değiştirecek bölümler
+  // şema 2 (oyun 1.1): bölümler kolaylaştırıldı; haritası değişenlerin kayıtlı programları silinir
+  const REDRAWN = { 2: ['1-2', '1-3', '1-4', '1-5', '1-6', '2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '3-1', '3-2', '3-3', '3-4', '3-5', '3-6', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '5-4', '5-6', '6-1', '6-2', '6-3', '6-4', '6-5', '6-6'] };
 
   KC.Save = {
     data: null,
@@ -931,6 +935,7 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
     migrate(from) {
       const d = this.data;
       for (let v = from + 1; v <= SCHEMA; v++) {
+        (REDRAWN[v] || []).forEach(id => { delete d.drafts[id]; });
         const map = MOVES[v];
         if (!map) continue;
         [d.stars, d.drafts].forEach(t => {
@@ -1801,9 +1806,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
    Her program Başla (S) bloğuyla başlar; par ve maxBlocks Başla'yı da sayar.
    tasks: görevler (plant Ek, water Sula, harvest Hasat et, feed Yem ver, eggs Topla ile yumurta) ve sayıları.
    par: 3. yıldız için en fazla blok; solution: örnek çözüm (S U D L R, E Ek, W Sula, H Hasat et, F Yem ver,
-   C Topla, döngü 3(R E)).
+   C Topla, döngü 3(R E)). İpucu ampulü bu çözümün yolunu gösterir: en doğal yol olsun.
+   maxBlocks: programın en fazla kaç blok olabileceği. 1.1'den beri cömert (par + 6): çocuk en kısa yolu bulamasa da
+   bitirebilsin. Döngü dünyasında döngüsüz program sığmayacak kadar (yoksa Tekrarla öğrenilmez).
    teach: o bölümde öğretilen yeni blok ya da nesne; test, bölümün onsuz çözülemediğini denetler.
-   Yarış bölümleri: neighbor = { char, dir, route } (haritada 1 başlangıç); trap: komşuya yenilen "doğal" yol.
+   Yarış bölümleri: neighbor = { char, dir, route } (haritada 1 başlangıç); komşu, en hızlı çözümden 2–3 adım geç bitirir.
+   trap: komşuya yenilen savruk bir yol (yalnızca test kullanır).
    Her bölüm tools/test_levels.js ile doğrulanır:  node tools/test_levels.js */
 (function (root) {
   'use strict';
@@ -1828,7 +1836,7 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
             'B......',
           ],
           tasks: { plant: 1 },
-          maxBlocks: 7, par: 5, solution: 'S R R R E',
+          maxBlocks: 11, par: 5, solution: 'S R R R E',
           intro: {
             tr: 'Merhaba, ben Cik! Çiftçi uyuyor. {start} Başla ile horozu öttür, {right} ile tarlaya yürü, {plant} ile tohum ek!',
             en: 'Hi, I am Cik! The farmer is asleep. Wake them with {start}, walk with {right} and {plant} a seed!',
@@ -1838,13 +1846,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '1-2',
           name: { tr: 'Yukarıdaki Tarla', en: 'Field Up High' },
           map: [
-            'T....f.',
-            'B....=.',
-            '.S====.',
-            '......T',
+            'T...f.T',
+            '....=..',
+            '..S==.B',
           ],
           tasks: { plant: 1 },
-          maxBlocks: 10, par: 8, solution: 'S R R R R U U E',
+          maxBlocks: 12, par: 6, solution: 'S R R U U E',
           intro: {
             tr: 'Tarla yukarıda! {up} bloğu çiftçiyi bir kare yukarı götürür. Kareleri sayarak ilerle.',
             en: 'The field is up there! The {up} block moves the farmer one square up. Count the squares.',
@@ -1854,12 +1861,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '1-3',
           name: { tr: 'Uğur Böceği', en: 'Ladybug' },
           map: [
-            '...b...',
-            '.S...f.',
+            '..b.f..',
+            '.S.....',
             'T.....B',
           ],
           tasks: { plant: 1 },
-          maxBlocks: 10, par: 8, solution: 'S R R U R R D E',
+          maxBlocks: 12, par: 6, solution: 'S U R R R E',
           intro: {
             tr: 'Bir {bug} uğur böceği var! Üstünden geçersen uçar gider ve sen bir yıldız daha kazanırsın.',
             en: 'There is a {bug} ladybug! Walk over it and it flies away, and you earn another star.',
@@ -1869,13 +1876,13 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '1-4',
           name: { tr: 'Aşağı ve Sola', en: 'Down and Left' },
           map: [
-            '...TTS.',
+            '..TTS..',
             '.......',
-            '.f.b...',
-            'B.....T',
+            '..fb...',
+            'R.....T',
           ],
           tasks: { plant: 1 },
-          maxBlocks: 10, par: 8, solution: 'S D D L L L L E',
+          maxBlocks: 12, par: 6, solution: 'S D D L L E',
           intro: {
             tr: 'Bu kez {down} aşağı ve {left} sola gitmen gerekiyor. Ağaçlara ve kayaya çarpma!',
             en: 'This time go {down} down and {left} left. Do not bump into the trees and the rock!',
@@ -1885,13 +1892,13 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '1-5',
           name: { tr: 'İki Tarla', en: 'Two Fields' },
           map: [
-            '...T...',
-            '.S.T.f.',
+            '.......',
+            '.S.f.T.',
             '...b...',
-            '.f.T...',
+            'B..f...',
           ],
           tasks: { plant: 2 },
-          maxBlocks: 13, par: 11, solution: 'S D D E U R R R U R E',
+          maxBlocks: 13, par: 7, solution: 'S R R E D D E',
           intro: {
             tr: 'İki tarlaya da tohum ek! Görev listesine bak: {seed} 2 tohum.',
             en: 'Plant a seed in both fields! Look at the task list: {seed} 2 seeds.',
@@ -1901,16 +1908,15 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '1-6',
           name: { tr: 'Tarla Turu', en: 'Field Tour' },
           map: [
-            '.f.b.f.',
-            '.T...T.',
-            'b..S...',
-            '...f...',
+            '.fbf.f.',
+            '...T..B',
+            '.S.....',
           ],
           tasks: { plant: 3 },
-          maxBlocks: 18, par: 16, solution: 'S D E U L L L U U R E R R R R E',
+          maxBlocks: 16, par: 10, solution: 'S U U E R R E R R E',
           intro: {
-            tr: 'Üç tarlaya tohum ek ve iki uğur böceğini bul. Önce plan yap!',
-            en: 'Plant three seeds and find both ladybugs. Make a plan first!',
+            tr: 'Üç tarlaya tohum ek ve uğur böceğini bul. Önce plan yap!',
+            en: 'Plant three seeds and find the ladybug. Make a plan first!',
           },
         },
       ],
@@ -1927,11 +1933,11 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           palette: P1.concat(['water']),
           map: [
             'T......',
-            '.S=W=s.',
+            '.S=Ws..',
             '......B',
           ],
           tasks: { water: 1 },
-          maxBlocks: 8, par: 6, solution: 'S R R R R W',
+          maxBlocks: 11, par: 5, solution: 'S R R R W',
           intro: {
             tr: 'Tohum susamış! Önce {well} kuyunun üstünden geç: sulama kabın dolar. Sonra tohumun üstünde {water} sula.',
             en: 'The seed is thirsty! First walk over the {well} well to fill your watering can. Then {water} the seed.',
@@ -1942,12 +1948,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Filizler', en: 'Sprouts' },
           palette: P1.concat(['water']),
           map: [
-            'T..s...',
-            '.S.W.p.',
+            'T......',
+            '.SWsp..',
             '......B',
           ],
           tasks: { water: 2 },
-          maxBlocks: 11, par: 9, solution: 'S R R U W R R D W',
+          maxBlocks: 12, par: 6, solution: 'S R R W R W',
           intro: {
             tr: 'Su verince tohum filizlenir ve büyür. İki bitkiyi de sula!',
             en: 'Water makes a seed sprout and grow. Water both plants!',
@@ -1958,13 +1964,13 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Hasat Zamanı', en: 'Harvest Time' },
           palette: P1.concat(['harvest']),
           map: [
-            '.r...r.',
+            '.r.r...',
             '.S.....',
             'T.....B',
           ],
           crop: 'carrot',
           tasks: { harvest: 2 },
-          maxBlocks: 10, par: 8, solution: 'S U H R R R R H',
+          maxBlocks: 12, par: 6, solution: 'S U H R R H',
           intro: {
             tr: 'Havuçlar olgunlaştı! Olgun ürünün üstünde {harvest} Hasat et bloğunu kullan.',
             en: 'The carrots are ripe! Use {harvest} on top of a ripe plant.',
@@ -1975,12 +1981,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Tohumdan Sepete', en: 'Seed to Basket' },
           map: [
             '......T',
-            '.S.W.f.',
+            '.SWf...',
             'B......',
           ],
           crop: 'tomato',
           tasks: { plant: 1, water: 1, harvest: 1 },
-          maxBlocks: 10, par: 8, solution: 'S R R R R E W H',
+          maxBlocks: 12, par: 6, solution: 'S R R E W H',
           intro: {
             tr: 'Bütün iş sende: tohumu {plant} ek, {water} sula, olgunlaşınca {harvest} hasat et!',
             en: 'It is all up to you: {plant} the seed, {water} it, and {harvest} it when it is ripe!',
@@ -1991,33 +1997,32 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Kap Boşaldı', en: 'Empty Can' },
           palette: P1.concat(['water']),
           map: [
-            '..s..',
-            '.s.s.',
-            '..W..',
-            '.sS..',
+            'T.....T',
+            'SWsssWs',
+            '..B....',
           ],
           crop: 'corn',
           tasks: { water: 4 },
-          maxBlocks: 18, par: 16, solution: 'S U U U W R D W D L U L W D D W',
+          maxBlocks: 17, par: 11, solution: 'S R R W R W R W R R W',
           intro: {
-            tr: 'Sulama kabında yalnızca 3 su var. Dört tohum için ne yapmalısın?',
-            en: 'Your watering can holds only 3 water. What should you do for four seeds?',
+            tr: 'Sulama kabında yalnızca 3 su var. Kap boşalınca ikinci {well} kuyunun üstünden geç, kabın yeniden dolar!',
+            en: 'Your watering can holds only 3 water. When it is empty, walk over the second {well} well to fill it again!',
           },
         },
         {
           id: '2-6',
           name: { tr: 'Bereketli Tarla', en: 'Bountiful Field' },
           map: [
-            'T.r.f.T',
-            '.b.W.s.',
-            '...S...',
+            'T.....T',
+            'SbWrf..',
+            '......B',
           ],
           crop: 'pumpkin',
-          tasks: { plant: 1, water: 2, harvest: 3 },
-          maxBlocks: 18, par: 16, solution: 'S U L L U R H R R E W H R D W H',
+          tasks: { plant: 1, water: 1, harvest: 2 },
+          maxBlocks: 15, par: 9, solution: 'S R R R H R E W H',
           intro: {
-            tr: 'Büyük gün! Tohum ek, sula ve hasat et. Uğur böceğini de unutma.',
-            en: 'Big day! Plant, water and harvest. Do not forget the ladybug.',
+            tr: 'Büyük gün! Olgun balkabağını hasat et, sonra yanına tohum ek, sula ve onu da hasat et. Uğur böceğini de unutma.',
+            en: 'Big day! Harvest the ripe pumpkin, then plant a seed next to it, water it and harvest it too. Do not forget the ladybug.',
           },
         },
       ],
@@ -2034,11 +2039,11 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           palette: P1.concat(['feed']),
           map: [
             'T......',
-            '.S.Y.c.',
+            '.SY=c..',
             '......B',
           ],
           tasks: { feed: 1 },
-          maxBlocks: 8, par: 6, solution: 'S R R R R F',
+          maxBlocks: 11, par: 5, solution: 'S R R R F',
           intro: {
             tr: 'Tavuk acıkmış! Önce {sack} yem çuvalının üstünden geç, yem alırsın. Sonra tavuğun karesinde {feed} yem ver.',
             en: 'The hen is hungry! First walk over the {sack} feed sack to take some feed. Then {feed} the hen on her square.',
@@ -2048,12 +2053,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '3-2', tutorial: 'collect', teach: 'collect',
           name: { tr: 'Taze Yumurta', en: 'Fresh Egg' },
           map: [
-            '..Y....',
-            '.S...c.',
             'T......',
+            '.SY.c..',
+            '......B',
           ],
           tasks: { feed: 1, eggs: 1 },
-          maxBlocks: 11, par: 9, solution: 'S U R R R R D F C',
+          maxBlocks: 12, par: 6, solution: 'S R R R F C',
           intro: {
             tr: 'Karnı doyan tavuk sevinir ve yumurtlar! Yumurtayı {egg} {collect} Topla bloğuyla al.',
             en: 'A full hen is happy and lays an egg! Pick up the {egg} egg with the {collect} Collect block.',
@@ -2063,12 +2068,13 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '3-3',
           name: { tr: 'Yuvalar', en: 'Nests' },
           map: [
-            '.n.T.n.',
-            '...S...',
-            'T.b.n.B',
+            '.......',
+            '.S.n.n.',
+            '.....b.',
+            'B....n.',
           ],
           tasks: { eggs: 3 },
-          maxBlocks: 17, par: 15, solution: 'S R U R C D D L C L L U U L C',
+          maxBlocks: 16, par: 10, solution: 'S R R C R R C D D C',
           intro: {
             tr: 'Yuvalarda {nest} yumurtalar var. Her yuvaya git ve {collect} topla. Uğur böceğini de unutma!',
             en: 'There are eggs in the {nest} nests. Go to each nest and {collect} the egg. Do not forget the ladybug!',
@@ -2076,44 +2082,44 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
         },
         {
           id: '3-4',
-          name: { tr: 'Üç Tavuk', en: 'Three Hens' },
+          name: { tr: 'İki Tavuk', en: 'Two Hens' },
           map: [
-            'T.c.c..',
-            '..Y..c.',
-            '.S....B',
+            'T......',
+            'SYc.c..',
+            '......B',
           ],
-          tasks: { feed: 3, eggs: 2 },
-          maxBlocks: 15, par: 13, solution: 'S U R U F R R F C R D F C',
+          tasks: { feed: 2, eggs: 2 },
+          maxBlocks: 15, par: 9, solution: 'S R R F C R R F C',
           intro: {
-            tr: 'Üç tavuk da aç. Hepsine {feed} yem ver ve iki {egg} yumurta topla.',
-            en: 'All three hens are hungry. {feed} them all and collect two {egg} eggs.',
+            tr: 'İki tavuk da aç. İkisine de {feed} yem ver ve {egg} yumurtalarını topla.',
+            en: 'Both hens are hungry. {feed} them both and collect their {egg} eggs.',
           },
         },
         {
           id: '3-5',
           name: { tr: 'Yem Bitti', en: 'Out of Feed' },
           map: [
-            'cc.cc',
-            '..Y..',
-            '..S..',
+            'T.....T',
+            'SYcccYc',
+            '..B....',
           ],
           tasks: { feed: 4 },
-          maxBlocks: 17, par: 15, solution: 'S U U R R F L F D L U L F L F',
+          maxBlocks: 17, par: 11, solution: 'S R R F R F R F R R F',
           intro: {
-            tr: 'Dört tavuk var ama çuvaldan bir seferde 3 yem alabilirsin. Yemin bitince ne yapmalısın?',
-            en: 'There are four hens, but you can carry only 3 feed at a time. What do you do when you run out?',
+            tr: 'Dört tavuk var ama bir seferde 3 yem taşıyabilirsin. Yemin bitince ikinci {sack} çuvalın üstünden geç!',
+            en: 'There are four hens, but you can carry only 3 feed at a time. When you run out, walk over the second {sack} sack!',
           },
         },
         {
           id: '3-6',
           name: { tr: 'Kümes Şenliği', en: 'Hen House Party' },
           map: [
-            'n..c..',
-            '.T.Y.b',
-            'c..S..',
+            'T.....T',
+            'SYcnbc.',
+            '......B',
           ],
           tasks: { feed: 2, eggs: 3 },
-          maxBlocks: 19, par: 17, solution: 'S U R R U L L F C L L L C D D F C',
+          maxBlocks: 17, par: 11, solution: 'S R R F C R C R R F C',
           intro: {
             tr: 'Kümesin büyük günü! İki tavuğu besle, üç yumurta topla ve uğur böceğini bul.',
             en: 'A big day at the hen house! Feed two hens, collect three eggs and find the ladybug.',
@@ -2131,12 +2137,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '4-1', tutorial: 'gate', teach: 'plate',
           name: { tr: 'Sarı Kapı', en: 'Yellow Gate' },
           map: [
-            'S..x...',
-            '####X##',
+            'S.x....',
+            '##X####',
             '..f....',
           ],
           tasks: { plant: 1 },
-          maxBlocks: 12, par: 10, solution: 'S R R R R D D L L E',
+          maxBlocks: 12, par: 6, solution: 'S R R D D E',
           intro: {
             tr: 'Bahçenin kapısı kapalı! {plateYellow} Sarı taşa basınca {gateYellow} sarı kapı açılır ve açık kalır.',
             en: 'The garden gate is closed! Step on the {plateYellow} yellow stone and the {gateYellow} yellow gate opens and stays open.',
@@ -2147,13 +2153,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Mavi Kapı', en: 'Blue Gate' },
           palette: P1.concat(['plant', 'water', 'harvest']),
           map: [
-            'z.W....',
-            'S......',
+            'SzW....',
             '###Z###',
-            '..s.s..',
+            '...ss..',
           ],
           tasks: { water: 2 },
-          maxBlocks: 15, par: 13, solution: 'S U R R R D D D R W L L W',
+          maxBlocks: 15, par: 9, solution: 'S R R R D D W R W',
           intro: {
             tr: 'Bu kez mavi kapı! Önce {plateBlue} mavi taşa bas, {well} kuyudan su al, sonra tohumları sula.',
             en: 'This time a blue gate! Step on the {plateBlue} blue stone, get water from the {well} well, then water the seeds.',
@@ -2163,13 +2168,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '4-3', teach: 'plate',
           name: { tr: 'İki Kapı', en: 'Two Gates' },
           map: [
-            'S.x#...',
-            '...X.z.',
-            '####Z##',
-            '...f...',
+            'SxX.z',
+            '####Z',
+            '....f',
           ],
           tasks: { plant: 1 },
-          maxBlocks: 14, par: 12, solution: 'S R R D R R R L D D L E',
+          maxBlocks: 14, par: 8, solution: 'S R R R R D D E',
           intro: {
             tr: 'İki kapı, iki taş! Mavi taş sarı kapının arkasında. Hangi taşa önce basmalısın?',
             en: 'Two gates, two stones! The blue stone is behind the yellow gate. Which stone comes first?',
@@ -2180,12 +2184,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Kümes Kapısı', en: 'Hen House Gate' },
           palette: P1.concat(['feed', 'collect']),
           map: [
-            'c.#.x',
-            '..X.Y',
-            'c.#.S',
+            'SYx..',
+            '##X##',
+            'c.c..',
           ],
           tasks: { feed: 2, eggs: 2 },
-          maxBlocks: 17, par: 15, solution: 'S U U D L L L U L F C D D F C',
+          maxBlocks: 17, par: 11, solution: 'S R R D D F C L L F C',
           intro: {
             tr: 'Tavuklar çitin arkasında. Yemini al, kapıyı aç, tavukları besle ve yumurtaları topla.',
             en: 'The hens are behind the fence. Take the feed, open the gate, feed the hens and collect the eggs.',
@@ -2195,16 +2199,17 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           id: '4-5', teach: 'plate',
           name: { tr: 'Bahçe Labirenti', en: 'Garden Maze' },
           map: [
-            'S.#..',
-            'x.X.z',
+            'S.x..',
+            '#X###',
+            '..z..',
             '###Z#',
-            'f...f',
+            '...f.',
           ],
-          tasks: { plant: 2 },
-          maxBlocks: 18, par: 16, solution: 'S D R R R R L D D R E L L L L E',
+          tasks: { plant: 1 },
+          maxBlocks: 17, par: 11, solution: 'S R R L D D R R D D E',
           intro: {
-            tr: 'Çitlerle dolu bir bahçe! Taşlara doğru sırayla bas ve iki tarlaya da tohum ek.',
-            en: 'A garden full of fences! Step on the stones in the right order and plant both fields.',
+            tr: 'Çitlerle dolu bir bahçe! Taşlara doğru sırayla bas ve tarlaya tohum ek.',
+            en: 'A garden full of fences! Step on the stones in the right order and plant the field.',
           },
         },
         {
@@ -2212,14 +2217,13 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Bahçe Şenliği', en: 'Garden Party' },
           palette: P1.concat(['plant', 'water', 'harvest', 'feed', 'collect']),
           map: [
-            'Y.W#s',
-            'S.bX.',
-            '..x#c',
-            '...#.',
+            'SYWx.',
+            '###X#',
+            '..cs.',
           ],
           crop: 'tomato',
           tasks: { water: 1, harvest: 1, feed: 1, eggs: 1 },
-          maxBlocks: 18, par: 16, solution: 'S U R R D D U R R U W H D D F C',
+          maxBlocks: 17, par: 11, solution: 'S R R R D D W H L F C',
           intro: {
             tr: 'Bütün bloklar burada! Yem ve su al, kapıyı aç; tohumu sula ve hasat et, tavuğu besle ve yumurtasını topla.',
             en: 'Every block is here! Take feed and water, open the gate; water and harvest the seed, feed the hen and collect her egg.',
@@ -2244,7 +2248,7 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           ],
           crop: 'corn',
           tasks: { plant: 4 },
-          maxBlocks: 5, par: 4, solution: 'S 4(R E)',
+          maxBlocks: 8, par: 4, solution: 'S 4(R E)',
           intro: {
             tr: 'Dört tarlaya ekmek için çok blok gerekir! {loop} Tekrarla bloğunu ekle, içine {right} ve {plant} koy, sayıyı 4 yap.',
             en: 'Planting four fields takes many blocks! Add a {loop} Repeat block, put {right} and {plant} inside and set it to 4.',
@@ -2261,7 +2265,7 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           ],
           crop: 'corn',
           tasks: { water: 3 },
-          maxBlocks: 6, par: 5, solution: 'S R 3(R W)',
+          maxBlocks: 7, par: 5, solution: 'S R 3(R W)',
           intro: {
             tr: '{well} Kuyudan suyunu al, sonra sıradaki tohumları sula. Hangi bloklar tekrar ediyor?',
             en: 'Get water from the {well} well, then water the seeds in the row. Which blocks repeat?',
@@ -2277,7 +2281,7 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           ],
           crop: 'carrot',
           tasks: { plant: 3, water: 3, harvest: 3 },
-          maxBlocks: 9, par: 7, solution: 'S R 3(R E W H)',
+          maxBlocks: 13, par: 7, solution: 'S R 3(R E W H)',
           intro: {
             tr: 'Her tarlada aynı iş var: ek, sula, hasat et. Bu işi {loop} Tekrarla bloğunun içine koy!',
             en: 'Every field needs the same work: plant, water, harvest. Put that work inside a {loop} Repeat block!',
@@ -2289,15 +2293,15 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           palette: P1.concat(['plant', 'loop']),
           map: [
             'Sfff...',
-            '.fff...',
-            'T.....B',
+            '....fff',
+            'T......',
           ],
           crop: 'tomato',
           tasks: { plant: 6 },
-          maxBlocks: 9, par: 7, solution: 'S 3(R D E U E)',
+          maxBlocks: 13, par: 8, solution: 'S 3(R E) D 3(R E)',
           intro: {
-            tr: 'İki sıra tarla var. Tekrar eden deseni bul. Belki aşağı inip yukarı çıkarak ikisine birden ekebilirsin!',
-            en: 'There are two rows of fields. Find the repeating pattern. Maybe you can go down and up to plant both at once!',
+            tr: 'İki sıra tarla var. Birinci sırayı {loop} Tekrarla ile ek, bir kare aşağı in, ikinci sırayı da bir {loop} ile ek!',
+            en: 'There are two rows of fields. Plant the first row with a {loop} Repeat, step down, then plant the second row with another {loop}!',
           },
         },
         {
@@ -2310,7 +2314,7 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
             '......',
           ],
           tasks: { feed: 3, eggs: 3 },
-          maxBlocks: 9, par: 7, solution: 'S D 3(R F C R)',
+          maxBlocks: 12, par: 7, solution: 'S D 3(R F C R)',
           intro: {
             tr: 'Tavuklar sıraya dizilmiş. Yemini al, sonra tekrar eden parçayı {loop} içine koy.',
             en: 'The hens stand in a row. Take the feed, then put the repeating part inside a {loop}.',
@@ -2322,12 +2326,12 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           palette: P1.concat(['water', 'loop']),
           map: [
             'SWsss.',
-            '.Wsss.',
-            '......',
+            '.sssW.',
+            'T....B',
           ],
           crop: 'pumpkin',
           tasks: { water: 6 },
-          maxBlocks: 12, par: 10, solution: 'S 4(R) 3(W L) D 3(R W)',
+          maxBlocks: 14, par: 9, solution: 'S R 3(R W) D 3(L W)',
           intro: {
             tr: 'Altı tohum ve iki kuyu! Suyun bitince kuyuya uğramayı unutma. Birden fazla {loop} kullanabilirsin.',
             en: 'Six seeds and two wells! Do not forget to visit a well when your water runs out. You can use more than one {loop}.',
@@ -2346,17 +2350,17 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'İlk Yarış', en: 'First Race' },
           palette: P1.concat(['harvest', 'loop']),
           map: [
-            '1.....r',
-            '...r..r',
+            '1..r...',
+            '.r....r',
             '#######',
-            '.r..S..',
-            'r....rr',
+            'S.r.r.r',
+            '.......',
           ],
           crop: 'pumpkin',
           tasks: { harvest: 3 },
-          neighbor: { char: 'dede', dir: 'down', route: 'D R R R H U R R R H D H' },
-          trap: 'S L L L H D L H R R R R R H',
-          maxBlocks: 15, par: 8, solution: 'S D 2(R H) 6(L) H',
+          neighbor: { char: 'dede', dir: 'down', route: 'D R H R R U H R R R D H' },
+          trap: 'S R R R R R R H L L H L L H',
+          maxBlocks: 11, par: 5, solution: 'S 3(R R H)',
           intro: {
             tr: 'Hasat Şenliği başladı! Komşu da çitin öbür yanında çalışıyor. Her hareket ve her iş 1 adım sürer. Sağda komşunun kaç adımda bitirdiği yazıyor: ondan önce ya da onunla aynı anda bitir!',
             en: 'The Harvest Festival has begun! The neighbor works on the other side of the fence. Every move and every job takes 1 step. The right side shows how many steps the neighbor needs: finish before, or at the same time!',
@@ -2367,21 +2371,21 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Su Yarışı', en: 'Water Race' },
           palette: P1.concat(['plant', 'water', 'harvest', 'loop']),
           map: [
-            '1W....s',
-            '.....ss',
+            '1.W....',
+            '..s..ss',
             '#######',
-            '.W..S.W',
+            'S.W....',
             '.......',
-            'sss....',
+            '..s.s.s',
           ],
           crop: 'corn',
           tasks: { water: 3 },
-          neighbor: { char: 'nine', dir: 'down', route: 'R R R R R D W R W U W' },
-          trap: 'S R R D D L L L L W L W L W',
-          maxBlocks: 14, par: 8, solution: 'S 4(L) 2(D) 3(W R)',
+          neighbor: { char: 'nine', dir: 'down', route: 'R R R R R R D W L W L L L W' },
+          trap: 'S R R D D R R R R W L L W L L W',
+          maxBlocks: 15, par: 9, solution: 'S R R D D 3(W R R)',
           intro: {
-            tr: 'İki kuyu var. En yakın kuyu her zaman en iyisi mi? Adımları say!',
-            en: 'There are two wells. Is the nearest well always the best one? Count the steps!',
+            tr: 'Kuyudan suyunu al ve tohumları sırayla sula. En uzaktakine önce gidersen geri dönmek zaman alır!',
+            en: 'Get water from the well and water the seeds in order. If you go to the farthest one first, coming back takes time!',
           },
         },
         {
@@ -2389,20 +2393,19 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           name: { tr: 'Yumurta Yarışı', en: 'Egg Race' },
           palette: P1.concat(['feed', 'collect', 'loop']),
           map: [
-            '1.....c',
-            'Y...n.c',
+            '.Y....n',
+            '1..c..c',
             '#######',
-            'n..S.Yc',
+            'SYc.c.n',
             '.......',
-            'c......',
           ],
           tasks: { feed: 2, eggs: 3 },
-          neighbor: { char: 'karabas', dir: 'down', route: 'D U R R R R R R F C D F C L L C' },
-          trap: 'S L L L C R R R R R R F C L L L L L L D D F C',
-          maxBlocks: 19, par: 12, solution: 'S 3(R) F C 6(L) 2(C D D F)',
+          neighbor: { char: 'karabas', dir: 'down', route: 'U R R R D F C R R R F C U C' },
+          trap: 'S R R R R R R C L L F C L L F C',
+          maxBlocks: 15, par: 9, solution: 'S R R 2(F C R R) C',
           intro: {
-            tr: 'Komşu da yumurta topluyor. Önce yem mi alırsın, yoksa yuvaya mı koşarsın?',
-            en: 'The neighbor is collecting eggs too. Do you get the feed first, or run to the nest?',
+            tr: 'Komşu da yumurta topluyor. Önce tavukları mı beslersin, yoksa yuvaya mı koşarsın?',
+            en: 'The neighbor is collecting eggs too. Do you feed the hens first, or run to the nest?',
           },
         },
         {
@@ -2411,17 +2414,17 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
           palette: P1.concat(['harvest', 'loop']),
           map: [
             '1..r..r',
-            '..r....',
+            '.r.....',
             '#######',
-            'r...#.r',
-            'S.x.X..',
+            'r...#..',
+            'S.x.X.r',
             '....#.r',
           ],
           crop: 'tomato',
           tasks: { harvest: 3 },
-          neighbor: { char: 'nine', dir: 'down', route: 'R R R H R R R H D L L L L H' },
-          trap: 'S R R R R R R U H D D H U L L L L L L U H',
-          maxBlocks: 17, par: 11, solution: 'S U H D 6(R) U 2(H D D)',
+          neighbor: { char: 'nine', dir: 'down', route: 'R R R H R R R H D L L L L L H' },
+          trap: 'S R R R R R R H D H U L L L L L L U H',
+          maxBlocks: 15, par: 9, solution: 'S U H D 6(R) 2(H D)',
           intro: {
             tr: 'Taş, kapı ve üç ürün. Hangi sırayla gidersen daha az adım atarsın?',
             en: 'A stone, a gate and three crops. Which order takes the fewest steps?',
@@ -2430,43 +2433,42 @@ window.KC_ART.inline = {"barn.png": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU
         {
           id: '6-5',
           name: { tr: 'Döngü Yarışı', en: 'Loop Race' },
-          palette: P1.concat(['plant', 'water', 'harvest', 'loop']),
+          palette: P1.concat(['harvest', 'loop']),
           map: [
-            '.Wffff.',
-            '1......',
+            '1.....r',
+            '...rrr.',
             '#######',
-            'W.ffff.',
-            'S......',
+            'S.rrrr.',
+            '.......',
           ],
           crop: 'carrot',
-          tasks: { plant: 4, water: 3 },
-          neighbor: { char: 'dede', dir: 'down', route: 'U R R E W R E W R E W R E' },
-          trap: 'S U R R E R E R E R E W L W L W',
-          maxBlocks: 16, par: 7, solution: 'S U R 4(R E W)',
+          tasks: { harvest: 4 },
+          neighbor: { char: 'dede', dir: 'down', route: 'D R R R H R H R H R U H' },
+          trap: 'S D R R R R R U H L H L H L H',
+          maxBlocks: 11, par: 5, solution: 'S R 4(R H)',
           intro: {
-            tr: 'Komşu her tarlada önce ekiyor, sonra suluyor. Sen önce hepsini ekip sonra mı sularsın? Hangisi daha hızlı?',
-            en: 'The neighbor plants and then waters each field. Would you plant them all first and water later? Which is faster?',
+            tr: 'Dört olgun havuç yan yana! {loop} Tekrarla ile kısa bir program yaz ve komşudan önce bitir.',
+            en: 'Four ripe carrots in a row! Write a short program with {loop} Repeat and finish before the neighbor.',
           },
         },
         {
           id: '6-6',
           name: { tr: 'Şampiyonluk', en: 'Championship' },
           map: [
-            '1..n..n',
-            '.n.....',
+            '1.Y.W.c',
+            '.....rs',
             '#######',
-            'Y.c.r..',
-            'S.W.f..',
+            'SYWcsr.',
             '..b....',
           ],
           crop: 'pumpkin',
-          tasks: { plant: 1, water: 1, harvest: 2, feed: 1, eggs: 1 },
-          neighbor: { char: 'karabas', dir: 'down', route: 'R R R C R R R C D L L L L L C' },
-          trap: 'S R R L L U R R F C D D R R U E W H U H',
-          maxBlocks: 18, par: 16, solution: 'S U 2(R) F C 2(D) U 2(R) E W 2(H U)',
+          tasks: { water: 1, harvest: 2, feed: 1, eggs: 1 },
+          neighbor: { char: 'karabas', dir: 'down', route: 'R R R R R R F C D W H L H' },
+          trap: 'S D R U R R R R H L L F C R W H',
+          maxBlocks: 19, par: 13, solution: 'S R R D U R F C R W H R H',
           intro: {
-            tr: 'Büyük final! Yem, su, tohum, hasat ve yumurta. Uğur böceğini de al ve komşudan önce bitir!',
-            en: 'The grand finale! Feed, water, seeds, harvest and eggs. Grab the ladybug too and finish before the neighbor!',
+            tr: 'Büyük final! Yem ver, yumurta topla, sula ve hasat et. Uğur böceğini de al ve komşudan önce bitir!',
+            en: 'The grand finale! Feed, collect, water and harvest. Grab the ladybug too and finish before the neighbor!',
           },
         },
       ],
